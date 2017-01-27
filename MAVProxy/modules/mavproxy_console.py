@@ -14,6 +14,7 @@ from MAVProxy.modules.lib import mp_util
 from MAVProxy.modules.lib import mp_module
 from MAVProxy.modules.lib import wxsettings
 from MAVProxy.modules.lib.mp_menu import *
+from MAVProxy.modules.lib import agro_mode_conversions as convert_agro
 
 class ConsoleModule(mp_module.MPModule):
     def __init__(self, mpstate):
@@ -55,6 +56,8 @@ class ConsoleModule(mp_module.MPModule):
         mpstate.console.set_status('AspdError', 'AspdError --', row=3)
         mpstate.console.set_status('FlightTime', 'FlightTime --', row=3)
         mpstate.console.set_status('ETR', 'ETR --', row=3)
+        mpstate.console.set_status('Tank', 'perc: --', row=4)
+        mpstate.console.set_status('AgroMode', 'AgroMode: --', row=4)
 
         mpstate.console.ElevationMap = mp_elevation.ElevationModel()
 
@@ -130,7 +133,17 @@ class ConsoleModule(mp_module.MPModule):
 
         master = self.master
         # add some status fields
-        if type in [ 'GPS_RAW', 'GPS_RAW_INT' ]:
+        if type in ['TANK_LEVEL']:
+            perc = msg.perc
+            self.console.set_status('Tank', 'Perc: %u' % perc)
+        elif type in ['GET_AGRO_MODE']:
+            agro_mode = msg.agro_mode
+            agro_sub_mode = msg.agro_sub_mode
+            self.console.set_status('AgroMode', 'AgroMode: ' +
+                   convert_agro.mode_enum_to_string(agro_mode) + '[' + 
+                   convert_agro.sub_mode_enum_to_string(agro_sub_mode) +']')
+            # self.console.set_status('AgroMode', 'AgroMode: %u' % agro_mode, fg='green')
+        elif type in [ 'GPS_RAW', 'GPS_RAW_INT' ]:
             if type == "GPS_RAW":
                 num_sats1 = master.field('GPS_STATUS', 'satellites_visible', 0)
             else:
